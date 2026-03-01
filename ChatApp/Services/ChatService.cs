@@ -17,11 +17,29 @@ public class ChatService(AppDbContext db)
 
     public async Task<ChatRoom?> GetChatForUserAsync(int chatId, int userId)
     {
-        return await db.ChatRooms
-            .Include(c => c.Members).ThenInclude(m => m.User)
-            .Include(c => c.Messages.OrderBy(m => m.SentAtUtc).Take(100))
-            .ThenInclude(m => m.SenderUser)
+        // Важно: SQLite не поддерживает SQL APPLY, который может генерироваться
+        // при filtered Include с OrderBy/Take на коллекции.
+        // Поэтому загружаем чат и сообщения отдельными запросами.
+        var chat = await db.ChatRooms
+            .Include(c => c.Members)
+            .ThenInclude(m => m.User)
             .FirstOrDefaultAsync(c => c.Id == chatId && c.Members.Any(m => m.UserId == userId));
+
+        if (chat is null)
+        {
+            return null;
+        }
+
+        var messages = await db.ChatMessages
+            .Where(m => m.ChatRoomId == chatId)
+            .Include(m => m.SenderUser)
+            .OrderByDescending(m => m.SentAtUtc)
+            .Take(100)
+            .OrderBy(m => m.SentAtUtc)
+            .ToListAsync();
+
+        chat.Messages = messages;
+        return chat;
     }
 
     public async Task<List<User>> GetAllUsersAsync()

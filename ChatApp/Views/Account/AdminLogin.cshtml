@@ -1,0 +1,20 @@
+@model AdminLoginViewModel
+@{
+    ViewData["Title"] = "Вход администратора";
+}
+
+<h1>Вход администратора</h1>
+<p>Учетка админа задается вручную в appsettings.json.</p>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <label asp-for="Username"></label>
+    <input asp-for="Username" />
+    <span asp-validation-for="Username"></span>
+
+    <label asp-for="Password"></label>
+    <input asp-for="Password" />
+    <span asp-validation-for="Password"></span>
+
+    <button type="submit">Войти как админ</button>
+</form>

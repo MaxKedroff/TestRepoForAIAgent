@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Multi Chat</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<header class="topbar">
+    <div><strong>Multi Chat</strong></div>
+    <nav>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <span>@User.Identity.Name</span>
+            <form asp-controller="Account" asp-action="Logout" method="post" class="inline">
+                @Html.AntiForgeryToken()
+                <button type="submit">Выйти</button>
+            </form>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login">Вход по токену</a>
+            <a asp-controller="Account" asp-action="AdminLogin">Вход админа</a>
+        }
+    </nav>
+</header>
+<main class="container">
+    @RenderBody()
+</main>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

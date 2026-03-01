@@ -1,0 +1,30 @@
+@model CreateChatViewModel
+@{
+    ViewData["Title"] = "Создание чата";
+}
+
+<h1>Создание чата</h1>
+@if (TempData["success"] is string success)
+{
+    <p class="success">@success</p>
+}
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <label asp-for="Name"></label>
+    <input asp-for="Name" />
+    <span asp-validation-for="Name"></span>
+
+    <label asp-for="SelectedUserIds">Выберите участников</label>
+    <select asp-for="SelectedUserIds" multiple size="8">
+        @foreach (var user in Model.AvailableUsers)
+        {
+            <option value="@user.Id">@user.Nickname</option>
+        }
+    </select>
+    <span asp-validation-for="SelectedUserIds"></span>
+
+    <button type="submit">Создать</button>
+</form>
+
+<p><a asp-action="Index">Назад</a></p>

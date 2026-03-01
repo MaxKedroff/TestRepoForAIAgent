@@ -1,0 +1,77 @@
+@model ChatRoom
+@{
+    ViewData["Title"] = $"Чат: {Model.Name}";
+    var currentUserId = (int)ViewBag.CurrentUserId;
+}
+
+<h1>@Model.Name</h1>
+<p>Участники: @string.Join(", ", Model.Members.Select(m => m.User.Nickname))</p>
+
+<div id="typingIndicator" class="typing"></div>
+
+<div id="messages" class="messages">
+    @foreach (var msg in Model.Messages.OrderBy(m => m.SentAtUtc))
+    {
+        <div class="msg @(msg.SenderUserId == currentUserId ? "mine" : "")">
+            <strong>@msg.SenderUser.Nickname</strong>:
+            <span>@msg.Text</span>
+            <small>@msg.SentAtUtc.ToLocalTime().ToString("HH:mm:ss")</small>
+        </div>
+    }
+</div>
+
+<form id="sendForm">
+    <input id="messageInput" maxlength="1000" placeholder="Введите сообщение..." autocomplete="off" />
+    <button type="submit">Отправить</button>
+</form>
+
+@section Scripts {
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+<script>
+    const chatId = @Model.Id;
+    const currentUserId = @currentUserId;
+    const list = document.getElementById("messages");
+    const form = document.getElementById("sendForm");
+    const input = document.getElementById("messageInput");
+    const typingIndicator = document.getElementById("typingIndicator");
+    let typingTimeout;
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/hubs/chat")
+        .build();
+
+    connection.on("ReceiveMessage", m => {
+        const div = document.createElement("div");
+        div.className = "msg " + (m.senderId === currentUserId ? "mine" : "");
+        div.innerHTML = `<strong>${m.sender}</strong>: <span>${m.text}</span> <small>${m.sentAt}</small>`;
+        list.appendChild(div);
+        list.scrollTop = list.scrollHeight;
+    });
+
+    connection.on("Typing", payload => {
+        typingIndicator.textContent = payload.isTyping ? `${payload.nickname} печатает...` : "";
+    });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        await connection.invoke("SendMessage", chatId, text);
+        input.value = "";
+        await connection.invoke("Typing", chatId, false);
+    });
+
+    input.addEventListener("input", async () => {
+        await connection.invoke("Typing", chatId, true);
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(async () => {
+            await connection.invoke("Typing", chatId, false);
+        }, 1200);
+    });
+
+    (async () => {
+        await connection.start();
+        await connection.invoke("JoinChat", chatId);
+    })();
+</script>
+}

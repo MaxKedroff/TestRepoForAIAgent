@@ -1,0 +1,23 @@
+@model List<ChatRoom>
+@{
+    ViewData["Title"] = "Мои чаты";
+}
+
+<h1>Мои чаты</h1>
+
+@if (Model.Count == 0)
+{
+    <p>У вас пока нет доступных чатов. Попросите администратора добавить вас.</p>
+}
+else
+{
+    <ul>
+        @foreach (var chat in Model)
+        {
+            <li>
+                <a asp-action="Room" asp-route-id="@chat.Id">@chat.Name</a>
+                <small>(@string.Join(", ", chat.Members.Select(m => m.User.Nickname)))</small>
+            </li>
+        }
+    </ul>
+}

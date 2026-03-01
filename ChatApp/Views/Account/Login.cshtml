@@ -1,0 +1,19 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Вход по токену";
+}
+
+<h1>Вход пользователя</h1>
+<p>Введите токен, который вам выдал администратор.</p>
+
+<form method="post">
+    @Html.AntiForgeryToken()
+    <label asp-for="Token"></label>
+    <input asp-for="Token" />
+    <span asp-validation-for="Token"></span>
+    <button type="submit">Войти</button>
+</form>
+
+<div>
+    <a asp-action="AdminLogin">Я администратор</a>
+</div>

@@ -1,0 +1,40 @@
+@model IssueTokenViewModel
+@{
+    ViewData["Title"] = "Панель администратора";
+    var users = ViewBag.Users as List<User> ?? new List<User>();
+}
+
+<h1>Панель администратора</h1>
+
+<section>
+    <h2>Выдать аккаунт пользователю</h2>
+    <form asp-action="IssueToken" method="post">
+        @Html.AntiForgeryToken()
+        <label asp-for="Nickname"></label>
+        <input asp-for="Nickname" />
+        <span asp-validation-for="Nickname"></span>
+        <button type="submit">Сгенерировать токен</button>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.IssuedToken))
+    {
+        <div class="token-box">
+            <strong>Токен для @Model.Nickname:</strong>
+            <code>@Model.IssuedToken</code>
+        </div>
+    }
+</section>
+
+<section>
+    <h2>Пользователи</h2>
+    <ul>
+        @foreach (var user in users)
+        {
+            <li>@user.Nickname</li>
+        }
+    </ul>
+</section>
+
+<section>
+    <a asp-action="CreateChat">Создать чат</a>
+</section>
